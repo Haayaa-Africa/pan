@@ -30,13 +30,21 @@ final readonly class DatabaseAnalyticsRepository implements AnalyticsRepository
      */
     public function all(): array
     {
+        $config = $this->config->toArray();
+        $query = DB::table('pan_analytics');
+
+        if ($config['tenant_key'] !== null && $config['tenant_id'] !== null) {
+            $query->where($config['tenant_key'], $config['tenant_id']);
+        }
+
         /** @var array<int, Analytic> $all */
-        $all = DB::table('pan_analytics')->get()->map(fn (mixed $analytic): Analytic => new Analytic(
-            id: (int) $analytic->id, // @phpstan-ignore-line
-            name: $analytic->name, // @phpstan-ignore-line
-            impressions: (int) $analytic->impressions, // @phpstan-ignore-line
-            hovers: (int) $analytic->hovers, // @phpstan-ignore-line
-            clicks: (int) $analytic->clicks, // @phpstan-ignore-line
+        $all = $query->get()->map(fn (mixed $analytic): Analytic => new Analytic(
+            id: (int) $analytic->id,
+            name: $analytic->name,
+            impressions: (int) $analytic->impressions,
+            hovers: (int) $analytic->hovers,
+            clicks: (int) $analytic->clicks,
+            tenantId: $config['tenant_key'] !== null ? $analytic->{$config['tenant_key']} ?? null : null,
         ))->toArray();
 
         return $all;
@@ -50,21 +58,41 @@ final readonly class DatabaseAnalyticsRepository implements AnalyticsRepository
         [
             'allowed_analytics' => $allowedAnalytics,
             'max_analytics' => $maxAnalytics,
+            'tenant_key' => $tenantKey,
+            'tenant_id' => $tenantId,
         ] = $this->config->toArray();
 
         if (count($allowedAnalytics) > 0 && ! in_array($name, $allowedAnalytics, true)) {
             return;
         }
 
-        if (DB::table('pan_analytics')->where('name', $name)->count() === 0) {
-            if (DB::table('pan_analytics')->count() < $maxAnalytics) {
-                DB::table('pan_analytics')->insert(['name' => $name, $event->column() => 1]);
+        $query = DB::table('pan_analytics')->where('name', $name);
+
+        if ($tenantKey !== null && $tenantId !== null) {
+            $query->where($tenantKey, $tenantId);
+        }
+
+        if ($query->count() === 0) {
+            $countQuery = DB::table('pan_analytics');
+
+            if ($tenantKey !== null && $tenantId !== null) {
+                $countQuery->where($tenantKey, $tenantId);
+            }
+
+            if ($countQuery->count() < $maxAnalytics) {
+                $insertData = ['name' => $name, $event->column() => 1];
+
+                if ($tenantKey !== null && $tenantId !== null) {
+                    $insertData[$tenantKey] = $tenantId;
+                }
+
+                DB::table('pan_analytics')->insert($insertData);
             }
 
             return;
         }
 
-        DB::table('pan_analytics')->where('name', $name)->increment($event->column());
+        $query->increment($event->column());
     }
 
     /**
@@ -72,6 +100,14 @@ final readonly class DatabaseAnalyticsRepository implements AnalyticsRepository
      */
     public function flush(): void
     {
-        DB::table('pan_analytics')->truncate();
+        $config = $this->config->toArray();
+
+        if ($config['tenant_key'] !== null && $config['tenant_id'] !== null) {
+            DB::table('pan_analytics')
+                ->where($config['tenant_key'], $config['tenant_id'])
+                ->delete();
+        } else {
+            DB::table('pan_analytics')->truncate();
+        }
     }
 }

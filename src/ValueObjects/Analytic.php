@@ -20,6 +20,7 @@ final readonly class Analytic
         public int $impressions,
         public int $hovers,
         public int $clicks,
+        public ?string $tenantId = null,
     ) {
         //
     }
@@ -27,7 +28,7 @@ final readonly class Analytic
     /**
      * Returns the analytic as an array.
      *
-     * @return array{id: int, name: string, impressions: int, hovers: int, clicks: int}
+     * @return array{id: int, name: string, impressions: int, hovers: int, clicks: int, tenant_id: ?string}
      */
     public function toArray(): array
     {
@@ -37,6 +38,7 @@ final readonly class Analytic
             'impressions' => $this->impressions,
             'hovers' => $this->hovers,
             'clicks' => $this->clicks,
+            'tenant_id' => $this->tenantId,
         ];
     }
 }

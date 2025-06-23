@@ -125,6 +125,58 @@ Also on the client-side, these events are collected in a very performant way and
 
 On the server-side, Pan only stores: the analytic name, and a counter of how many times the different events were triggered. Via the `pan` Artisan command, you may visualize this data, and hopefully use this information to improve your application.
 
+## Multi-Tenant Support
+
+Pan includes built-in multi-tenant support, allowing you to isolate analytics data by tenant, organization, or any other identifier.
+
+### Configuration
+
+Enable multi-tenancy by setting a tenant key (column name) and tenant ID:
+
+```php
+use Pan\PanConfiguration;
+
+// Basic tenant setup
+PanConfiguration::setTenantKey('tenant_id');
+PanConfiguration::setTenantId('store:1234');
+
+// Or use custom column names
+PanConfiguration::setTenantKey('organization_id');
+PanConfiguration::setTenantId('org_456');
+```
+
+### Middleware Integration
+
+You can set the tenant ID dynamically in middleware for request-based tenancy:
+
+```php
+public function handle($request, Closure $next)
+{
+    $tenantId = $request->user()->organization_id;
+    PanConfiguration::setTenantId($tenantId);
+    
+    return $next($request);
+}
+```
+
+### Features
+
+- **Complete Isolation**: Each tenant sees only their own analytics data
+- **Flexible Column Names**: Use any column name as your tenant identifier
+- **Per-Tenant Limits**: Max analytics limits apply per tenant, not globally
+- **Tenant-Specific Operations**: Flush analytics for specific tenants only
+
+### Next Steps
+
+To enable multi-tenancy in your existing installation, you'll need to add a tenant column to your `pan_analytics` table:
+
+```php
+Schema::table('pan_analytics', function (Blueprint $table) {
+    $table->string('tenant_id')->nullable()->after('id')->index();
+    // Or use your preferred column name
+});
+```
+
 ## License
 
 Pan is open-sourced software licensed under the [MIT license](LICENSE.md).

@@ -20,6 +20,8 @@ final class PanConfiguration
         private int $maxAnalytics = 50,
         private array $allowedAnalytics = [],
         private string $routePrefix = 'pan',
+        private ?string $tenantKey = null,
+        private ?string $tenantId = null,
     ) {
         //
     }
@@ -67,6 +69,26 @@ final class PanConfiguration
     }
 
     /**
+     * Sets the tenant key (column name).
+     *
+     * @internal
+     */
+    private function setInternalTenantKey(?string $key): void
+    {
+        $this->tenantKey = $key;
+    }
+
+    /**
+     * Sets the tenant ID.
+     *
+     * @internal
+     */
+    private function setInternalTenantId(?string $id): void
+    {
+        $this->tenantId = $id;
+    }
+
+    /**
      * Sets the maximum number of analytics to store.
      */
     public static function maxAnalytics(int $number): void
@@ -103,6 +125,22 @@ final class PanConfiguration
     }
 
     /**
+     * Sets the tenant key (column name).
+     */
+    public static function setTenantKey(?string $key): void
+    {
+        self::instance()->setInternalTenantKey($key);
+    }
+
+    /**
+     * Sets the tenant ID.
+     */
+    public static function setTenantId(?string $id): void
+    {
+        self::instance()->setInternalTenantId($id);
+    }
+
+    /**
      * Resets the configuration to its default values.
      *
      * @internal
@@ -112,12 +150,14 @@ final class PanConfiguration
         self::maxAnalytics(50);
         self::allowedAnalytics([]);
         self::routePrefix('pan');
+        self::setTenantKey(null);
+        self::setTenantId(null);
     }
 
     /**
      * Converts the Pan configuration to an array.
      *
-     * @return array{max_analytics: int, allowed_analytics: array<int, string>, route_prefix: string}
+     * @return array{max_analytics: int, allowed_analytics: array<int, string>, route_prefix: string, tenant_key: ?string, tenant_id: ?string}
      *
      * @internal
      */
@@ -127,6 +167,8 @@ final class PanConfiguration
             'max_analytics' => $this->maxAnalytics,
             'allowed_analytics' => $this->allowedAnalytics,
             'route_prefix' => $this->routePrefix,
+            'tenant_key' => $this->tenantKey,
+            'tenant_id' => $this->tenantId,
         ];
     }
 }
