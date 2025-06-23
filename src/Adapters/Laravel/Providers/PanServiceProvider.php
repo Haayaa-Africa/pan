@@ -11,6 +11,7 @@ use Pan\Adapters\Laravel\Console\Commands\InstallPanCommand;
 use Pan\Adapters\Laravel\Console\Commands\PanCommand;
 use Pan\Adapters\Laravel\Console\Commands\PanFlushCommand;
 use Pan\Adapters\Laravel\Http\Controllers\EventController;
+use Pan\Adapters\Laravel\Http\Middleware\ApplyDynamicMiddleware;
 use Pan\Adapters\Laravel\Http\Middleware\InjectJavascriptLibrary;
 use Pan\Adapters\Laravel\Repositories\DatabaseAnalyticsRepository;
 use Pan\Contracts\AnalyticsRepository;
@@ -71,7 +72,7 @@ final class PanServiceProvider extends ServiceProvider
         $configArray = $config->toArray();
 
         Route::prefix($configArray['route_prefix'])
-            ->middleware($configArray['middleware'])
+            ->middleware([ApplyDynamicMiddleware::class])
             ->group(function (): void {
                 Route::post('/events', [EventController::class, 'store']);
             });

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Http\Request;
 use Pan\PanConfiguration;
 
 beforeEach(function (): void {
@@ -46,4 +47,43 @@ it('middleware configuration is applied to service provider', function (): void 
     $configArray = $config->toArray();
 
     expect($configArray['middleware'])->toBe(['throttle:60,1']);
+});
+
+it('applies custom middleware to analytics routes', function (): void {
+    // Create a simple test middleware class
+    $middlewareClass = new class
+    {
+        public function handle(Request $request, \Closure $next)
+        {
+            $response = $next($request);
+            $response->headers->set('X-Pan-Test-Middleware', 'applied');
+
+            return $response;
+        }
+    };
+
+    // Bind the middleware to the container
+    app()->bind('test-middleware', fn(): object => $middlewareClass);
+
+    PanConfiguration::middleware(['test-middleware']);
+
+    $response = $this->postJson('/pan/events', [
+        'name' => 'test-button',
+        'event' => 'clicked',
+    ]);
+
+    expect($response->headers->get('X-Pan-Test-Middleware'))->toBe('applied');
+});
+
+it('middleware is actually applied to the routes', function (): void {
+    // Test that auth middleware blocks unauthenticated requests
+    PanConfiguration::middleware(['auth']);
+
+    $response = $this->postJson('/pan/events', [
+        'name' => 'test-button',
+        'event' => 'clicked',
+    ]);
+
+    // Should return 401 or 500 (depending on auth configuration) because user is not authenticated
+    expect($response->status())->toBeIn([401, 500]);
 });
