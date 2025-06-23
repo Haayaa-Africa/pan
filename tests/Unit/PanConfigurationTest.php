@@ -9,6 +9,7 @@ it('have a max of 50 analytics by default', function (): void {
         'route_prefix' => 'pan',
         'tenant_key' => null,
         'tenant_id' => null,
+        'middleware' => [],
     ]);
 });
 
@@ -21,6 +22,7 @@ it('can set the max number of analytics to store', function (): void {
         'route_prefix' => 'pan',
         'tenant_key' => null,
         'tenant_id' => null,
+        'middleware' => [],
     ]);
 });
 
@@ -33,6 +35,7 @@ it('can set the max number of analytics to unlimited', function (): void {
         'route_prefix' => 'pan',
         'tenant_key' => null,
         'tenant_id' => null,
+        'middleware' => [],
     ]);
 });
 
@@ -45,6 +48,7 @@ it('can set the allowed analytics names to store', function (): void {
         'route_prefix' => 'pan',
         'tenant_key' => null,
         'tenant_id' => null,
+        'middleware' => [],
     ]);
 });
 
@@ -55,6 +59,7 @@ it('sets an empty array of allowed analytics names by default', function (): voi
         'route_prefix' => 'pan',
         'tenant_key' => null,
         'tenant_id' => null,
+        'middleware' => [],
     ]);
 });
 
@@ -67,6 +72,7 @@ it('can set the prefix url', function (): void {
         'route_prefix' => 'new-pan',
         'tenant_key' => null,
         'tenant_id' => null,
+        'middleware' => [],
     ]);
 });
 
@@ -81,6 +87,7 @@ it('may reset the configuration to its default values', function (): void {
         'route_prefix' => 'new-pan',
         'tenant_key' => null,
         'tenant_id' => null,
+        'middleware' => [],
     ]);
 
     PanConfiguration::reset();
@@ -91,6 +98,7 @@ it('may reset the configuration to its default values', function (): void {
         'route_prefix' => 'pan',
         'tenant_key' => null,
         'tenant_id' => null,
+        'middleware' => [],
     ]);
 });
 
@@ -103,6 +111,7 @@ it('can set the tenant key', function (): void {
         'route_prefix' => 'pan',
         'tenant_key' => 'tenant_id',
         'tenant_id' => null,
+        'middleware' => [],
     ]);
 });
 
@@ -115,6 +124,7 @@ it('can set the tenant id', function (): void {
         'route_prefix' => 'pan',
         'tenant_key' => null,
         'tenant_id' => 'store:1234',
+        'middleware' => [],
     ]);
 });
 
@@ -128,6 +138,7 @@ it('can set both tenant key and id', function (): void {
         'route_prefix' => 'pan',
         'tenant_key' => 'organization_id',
         'tenant_id' => 'org_456',
+        'middleware' => [],
     ]);
 });
 
@@ -145,6 +156,7 @@ it('can disable tenant functionality by setting values to null', function (): vo
         'route_prefix' => 'pan',
         'tenant_key' => null,
         'tenant_id' => null,
+        'middleware' => [],
     ]);
 });
 
@@ -161,5 +173,49 @@ it('resets tenant configuration when reset is called', function (): void {
         'route_prefix' => 'pan',
         'tenant_key' => null,
         'tenant_id' => null,
+        'middleware' => [],
+    ]);
+});
+
+it('can set middleware for routes', function (): void {
+    PanConfiguration::middleware(['auth', 'throttle:60,1']);
+
+    expect(PanConfiguration::instance()->toArray())->toBe([
+        'max_analytics' => 50,
+        'allowed_analytics' => [],
+        'route_prefix' => 'pan',
+        'tenant_key' => null,
+        'tenant_id' => null,
+        'middleware' => ['auth', 'throttle:60,1'],
+    ]);
+});
+
+it('can set multiple middleware configurations', function (): void {
+    PanConfiguration::middleware(['auth']);
+    PanConfiguration::middleware(['auth', 'verified', 'throttle:60,1']);
+
+    expect(PanConfiguration::instance()->toArray())->toBe([
+        'max_analytics' => 50,
+        'allowed_analytics' => [],
+        'route_prefix' => 'pan',
+        'tenant_key' => null,
+        'tenant_id' => null,
+        'middleware' => ['auth', 'verified', 'throttle:60,1'],
+    ]);
+});
+
+it('resets middleware when reset is called', function (): void {
+    PanConfiguration::middleware(['auth', 'throttle:60,1']);
+    PanConfiguration::maxAnalytics(100);
+
+    PanConfiguration::reset();
+
+    expect(PanConfiguration::instance()->toArray())->toBe([
+        'max_analytics' => 50,
+        'allowed_analytics' => [],
+        'route_prefix' => 'pan',
+        'tenant_key' => null,
+        'tenant_id' => null,
+        'middleware' => [],
     ]);
 });

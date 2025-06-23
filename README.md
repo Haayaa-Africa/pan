@@ -109,6 +109,33 @@ PanConfiguration::routePrefix('internal-analytics');
 
 With that set the url to track the analytics will be `/internal-analytics/events`.
 
+## Configure custom middleware
+
+You can apply custom middleware to Pan's analytics routes using the `PanConfiguration::middleware` method:
+
+```php
+use Pan\PanConfiguration;
+
+PanConfiguration::middleware(['auth', 'throttle:60,1']);
+```
+
+This is useful for:
+- **Rate limiting**: Prevent abuse of your analytics endpoints
+- **Authentication**: Require users to be logged in to track analytics  
+- **Authorization**: Restrict analytics to specific user roles
+- **Custom validation**: Apply your own middleware logic
+
+Example with multiple middleware:
+
+```php
+PanConfiguration::middleware([
+    'auth',
+    'verified',
+    'throttle:60,1',
+    'custom-analytics-middleware'
+]);
+```
+
 ## Flush your product analytics
 
 To flush your product analytics, you may use the `pan:flush` Artisan command:

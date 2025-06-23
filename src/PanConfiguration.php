@@ -15,6 +15,7 @@ final class PanConfiguration
      * Creates a new Pan configuration instance.
      *
      * @param  array<int, string>  $allowedAnalytics
+     * @param  array<int, string>  $middleware
      */
     private function __construct(
         private int $maxAnalytics = 50,
@@ -22,6 +23,7 @@ final class PanConfiguration
         private string $routePrefix = 'pan',
         private ?string $tenantKey = null,
         private ?string $tenantId = null,
+        private array $middleware = [],
     ) {
         //
     }
@@ -89,6 +91,18 @@ final class PanConfiguration
     }
 
     /**
+     * Sets the middleware for the routes.
+     *
+     * @param  array<int, string>  $middleware
+     *
+     * @internal
+     */
+    private function setInternalMiddleware(array $middleware): void
+    {
+        $this->middleware = $middleware;
+    }
+
+    /**
      * Sets the maximum number of analytics to store.
      */
     public static function maxAnalytics(int $number): void
@@ -141,6 +155,16 @@ final class PanConfiguration
     }
 
     /**
+     * Sets the middleware for the routes.
+     *
+     * @param  array<int, string>  $middleware
+     */
+    public static function middleware(array $middleware): void
+    {
+        self::instance()->setInternalMiddleware($middleware);
+    }
+
+    /**
      * Resets the configuration to its default values.
      *
      * @internal
@@ -152,12 +176,13 @@ final class PanConfiguration
         self::routePrefix('pan');
         self::setTenantKey(null);
         self::setTenantId(null);
+        self::middleware([]);
     }
 
     /**
      * Converts the Pan configuration to an array.
      *
-     * @return array{max_analytics: int, allowed_analytics: array<int, string>, route_prefix: string, tenant_key: ?string, tenant_id: ?string}
+     * @return array{max_analytics: int, allowed_analytics: array<int, string>, route_prefix: string, tenant_key: ?string, tenant_id: ?string, middleware: array<int, string>}
      *
      * @internal
      */
@@ -169,6 +194,7 @@ final class PanConfiguration
             'route_prefix' => $this->routePrefix,
             'tenant_key' => $this->tenantKey,
             'tenant_id' => $this->tenantId,
+            'middleware' => $this->middleware,
         ];
     }
 }
